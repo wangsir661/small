@@ -1,57 +1,48 @@
+# SPDX-License-Identifier: GPL-3.0-only
 #
-# Copyright (C) 2014-2015 OpenWrt.org
-#
-# This is free software, licensed under the GNU General Public License v2.
-# See /LICENSE for more information.
-#
+# Copyright (C) 2021 ImmortalWrt.org
 
 include $(TOPDIR)/rules.mk
 
-PKG_NAME:=redsocks
-PKG_VERSION:=0.5
-PKG_RELEASE:=2
+PKG_NAME:=redsocks2
+PKG_VERSION:=0.67
+PKG_RELEASE:=5
 
-PKG_SOURCE:=$(PKG_NAME)-release-$(PKG_VERSION).tar.gz
-PKG_SOURCE_URL:=https://codeload.github.com/darkk/redsocks/tar.gz/release-$(PKG_VERSION)?
-PKG_HASH:=bbeb531d7f1986d7102f1bd6733dacce41d3f3ba7d604f1aab61c63e0ba2ee62
-PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-release-$(PKG_VERSION)
+PKG_SOURCE_PROTO:=git
+PKG_SOURCE_URL:=https://github.com/semigodking/redsocks.git
+PKG_SOURCE_DATE:=2020-05-10
+PKG_SOURCE_VERSION:=d94c245ea47859cda5b4b7373308589206b97bdc
+PKG_MIRROR_HASH:=5ca32b2f849af7ebda2cab90bbe286bfd97a69de1a85dac09c8df2fbdd8c947c
 
-PKG_MAINTAINER:=Johannes Morgenroth <jm@m-network.de>
+PKG_MAINTAINER:=semigodking <semigodking@gmail.com>
 PKG_LICENSE:=Apache-2.0
+PKG_LICENSE_FILE:=LICENSE
+
+PKG_BUILD_PARALLEL:=1
 
 include $(INCLUDE_DIR)/package.mk
 
-define Package/redsocks
+define Package/redsocks2
   SECTION:=net
   CATEGORY:=Network
-  DEPENDS:=+libevent2-core
-  TITLE:=Redirect any TCP connection to a SOCKS or HTTPS proxy server
+  SUBMENU:=Web Servers/Proxies
+  TITLE:=Redirect TCP connection to proxy server
+  URL:=https://github.com/semigodking/redsocks
+  DEPENDS:=+libevent2 +libopenssl
 endef
 
-define Package/redsocks/conffiles
-/etc/redsocks.conf
+define Package/redsocks2/description
+  This is a modified version of original redsocks.
+  Transparent redirector of any TCP/UDP connection to proxy.
 endef
 
-define Package/redsocks/description
- Redsocks is a daemon running on the local system, that will transparently
- tunnel any TCP connection via a remote SOCKS4, SOCKS5 or HTTP proxy server. It
- uses the system firewall's redirection facility to intercept TCP connections,
- thus the redirection is system-wide, with fine-grained control, and does
- not depend on LD_PRELOAD libraries.
+MAKE_VARS += DISABLE_SHADOWSOCKS=true
 
- Redsocks supports tunneling TCP connections and UDP packets. It has
- authentication support for both, SOCKS and HTTP proxies.
-
- Also included is a small DNS server returning answers with the "truncated" flag
- set for any UDP query, forcing the resolver to use TCP.
+define Package/redsocks2/install
+	$(INSTALL_DIR) $(1)/usr/sbin
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/redsocks2 $(1)/usr/sbin
+	$(INSTALL_DIR) $(1)/etc/redsocks2
+	$(INSTALL_DATA) ./files/redsocks2.template $(1)/etc/redsocks2/config.template
 endef
 
-define Package/redsocks/install
-	$(INSTALL_DIR) $(1)/usr/sbin/
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/redsocks $(1)/usr/sbin/
-	$(INSTALL_DIR) $(1)/etc/init.d/
-	$(INSTALL_BIN) files/redsocks.init $(1)/etc/init.d/redsocks
-	$(INSTALL_CONF) files/redsocks.conf $(1)/etc/
-endef
-
-$(eval $(call BuildPackage,redsocks))
+$(eval $(call BuildPackage,redsocks2))
